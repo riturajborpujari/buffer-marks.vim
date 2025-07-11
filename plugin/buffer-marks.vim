@@ -31,5 +31,39 @@ function! s:PromptAndHandle(mode) abort
     endif
 endfunction
 
+let s:marks_list_popup_id = -1
+
+function! s:ShowMarksListPopup()
+  let lines = [' Mark  │ Buffer']
+  call add(lines, '───────┼────────────────────────')
+
+  for [key, bufnr] in items(s:buffer_marks)
+    let bufname = fnamemodify(bufname(bufnr), ':t')
+    let line = printf('  %-4s │ %s', key, bufname)
+    call add(lines, line)
+  endfor
+
+  let s:marks_list_popup_id = popup_create(lines, #{
+        \ line: &lines / 2 - 4,
+        \ col: &columns / 2 - (&columns/2) / 2 - 2,
+        \ pos: 'topleft',
+        \ padding: [1,1,1,1],
+        \ minwidth: &columns / 2 - 2,
+        \ highlight: 'Pmenu',
+        \ border: [0,0,0,0],
+        \ borderhighlight: ['Pmenu'],
+        \ })
+endfunction
+
+function! s:MarksListToggle() 
+    if s:marks_list_popup_id != -1
+        call popup_close(s:marks_list_popup_id)
+        let s:marks_list_popup_id = -1
+    else
+        call <SID>ShowMarksListPopup()
+    endif
+endfunction
+
 command! -nargs=0 Mark call <SID>PromptAndHandle('mark')
 command! -nargs=0 GoToMark call <SID>PromptAndHandle('goto_mark')
+command! -nargs=0 MarksListToggle call <SID>MarksListToggle()
